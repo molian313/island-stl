@@ -73,7 +73,7 @@ npm run tauri build
 | 名称 | 打印机昵称 | 1号 |
 | IP 地址 | 打印机局域网 IP | 192.168.0.109 |
 | 访问码 | Bambu Lab MQTT access code | 82d8f3a6 |
-| 序列号 | 打印机序列号 | 01P00C5C1902149 |
+| 序列号 | 打印机序列号 | 01P00C5C3912189 |
 
 配置文件保存在 `%APPDATA%\dynamic-island\printers_config.json`
 
