@@ -298,6 +298,7 @@
       <nav class="nav-list">
         <div class="nav-item active" data-page="general">常规设置</div>
         <div class="nav-item" data-page="printer">打印机</div>
+        <div class="nav-item" data-page="blacklist">屏蔽列表</div>
       </nav>
     </aside>
 
@@ -354,6 +355,33 @@
             </div>
           </div>
         </div>
+
+        <div class="page" id="page-blacklist">
+          <div class="setting-group">
+            <div class="setting-group-title">屏蔽设置</div>
+            <div class="setting-item">
+              <div class="setting-label">
+                <h3>启用屏蔽</h3>
+                <p>当黑名单中的进程在前台时，自动隐藏灵动岛。</p>
+              </div>
+              <div class="setting-control">
+                <label class="switch">
+                  <input type="checkbox" id="blacklist-enabled" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-group-title">黑名单进程</div>
+            <div id="blacklist-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px;"></div>
+            <div style="display:flex;gap:8px;">
+              <input id="blacklist-input" class="input" type="text" placeholder="进程名（如：chrome.exe）" style="flex:1;" />
+              <button id="blacklist-add" class="btn btn-primary">添加</button>
+              <button id="blacklist-save" class="btn btn-primary">保存</button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <footer class="footer">
@@ -375,6 +403,7 @@
     const pageInfo = {
       general: { title: "常规设置", desc: "配置系统选项。" },
       printer: { title: "打印机", desc: "管理 Bambu Lab 打印机连接配置。" },
+      blacklist: { title: "屏蔽列表", desc: "添加需要屏蔽灵动岛的进程名称（如 chrome.exe）。" },
     };
 
     function navigateTo(pageId) {
@@ -517,10 +546,76 @@
 
     debugToggle.addEventListener("change", updateDebugButton);
 
+    // Blacklist
+    const blacklistEnabled = document.getElementById("blacklist-enabled");
+    const blacklistInput = document.getElementById("blacklist-input");
+    const blacklistAdd = document.getElementById("blacklist-add");
+    const blacklistSave = document.getElementById("blacklist-save");
+    const blacklistList = document.getElementById("blacklist-list");
+    let blacklistProcesses = [];
+
+    function renderBlacklist() {
+      blacklistList.innerHTML = "";
+      blacklistProcesses.forEach((name, i) => {
+        const el = document.createElement("div");
+        el.className = "printer-item";
+        el.innerHTML = `
+          <div class="printer-item-info">
+            <div class="printer-item-name">${name}</div>
+          </div>
+          <button class="btn btn-danger" data-index="${i}">删除</button>
+        `;
+        el.querySelector("button")?.addEventListener("click", () => {
+          blacklistProcesses.splice(i, 1);
+          renderBlacklist();
+        });
+        blacklistList.appendChild(el);
+      });
+    }
+
+    async function loadBlacklist() {
+      try {
+        const enabled = await invoke("get_blacklist_enabled");
+        blacklistEnabled.checked = enabled;
+        blacklistProcesses = await invoke("get_blacklist");
+        renderBlacklist();
+      } catch (e) {
+        console.error("[Settings]", e);
+      }
+    }
+
+    blacklistEnabled.addEventListener("change", async () => {
+      try {
+        await invoke("set_blacklist_enabled", { enabled: blacklistEnabled.checked });
+      } catch (e) {
+        console.error("[Settings]", e);
+      }
+    });
+
+    blacklistAdd.addEventListener("click", () => {
+      const name = blacklistInput.value.trim().toLowerCase();
+      if (!name) return;
+      if (!blacklistProcesses.includes(name)) {
+        blacklistProcesses.push(name);
+        renderBlacklist();
+      }
+      blacklistInput.value = "";
+    });
+
+    blacklistSave.addEventListener("click", async () => {
+      try {
+        await invoke("save_blacklist", { processes: blacklistProcesses });
+        showStatus("黑名单已保存");
+      } catch (e) {
+        console.error("[Settings]", e);
+      }
+    });
+
     // Init
     loadSettings();
     loadPrinterConfigs();
     loadDebugMode();
+    loadBlacklist();
   </script>
 </body>
 </html>

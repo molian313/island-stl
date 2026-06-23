@@ -14,7 +14,13 @@ pub struct SettingsData {
     pub auto_start: bool,
     #[serde(default)]
     pub debug_mode: bool,
+    #[serde(default)]
+    pub blacklist_enabled: bool,
+    #[serde(default = "default_blacklist_processes")]
+    pub blacklist_processes: Vec<String>,
 }
+
+fn default_blacklist_processes() -> Vec<String> { Vec::new() }
 
 fn get_settings_path() -> PathBuf {
     let mut path = dirs::config_dir().unwrap_or_else(|| PathBuf::from("."));
@@ -31,7 +37,7 @@ pub fn load_settings_from_file() -> SettingsData {
             return data;
         }
     }
-    SettingsData { auto_start: false, debug_mode: false }
+    SettingsData { auto_start: false, debug_mode: false, blacklist_enabled: false, blacklist_processes: Vec::new() }
 }
 
 pub fn save_settings_to_file(data: &SettingsData) -> Result<(), String> {
@@ -145,4 +151,36 @@ fn apply_auto_start(enabled: bool) -> Result<(), String> {
         let _ = enabled;
         Ok(())
     }
+}
+
+#[tauri::command]
+pub fn get_blacklist() -> Vec<String> {
+    load_settings_from_file().blacklist_processes
+}
+
+#[tauri::command]
+pub fn get_blacklist_enabled() -> bool {
+    load_settings_from_file().blacklist_enabled
+}
+
+#[tauri::command]
+pub fn set_blacklist_enabled(app: tauri::AppHandle, enabled: bool) -> Result<(), String> {
+    let mut settings = load_settings_from_file();
+    settings.blacklist_enabled = enabled;
+    save_settings_to_file(&settings)?;
+    let _ = app.emit("blacklist-changed", serde_json::json!({ "enabled": enabled }));
+    Ok(())
+}
+
+#[tauri::command]
+pub fn save_blacklist(app: tauri::AppHandle, processes: Vec<String>) -> Result<(), String> {
+    let normalized: Vec<String> = processes.iter()
+        .map(|s| s.trim().to_lowercase())
+        .filter(|s| !s.is_empty())
+        .collect();
+    let mut settings = load_settings_from_file();
+    settings.blacklist_processes = normalized;
+    save_settings_to_file(&settings)?;
+    let _ = app.emit("blacklist-changed", serde_json::json!({ "processes": settings.blacklist_processes }));
+    Ok(())
 }

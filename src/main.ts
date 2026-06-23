@@ -34,15 +34,10 @@ async function updateSystemInfo() {
 async function initDebugButton() {
   const debugBtn = document.getElementById("debug-expand-btn")!;
 
-  // Load initial state from Rust (or force on in live mode)
-  const isLiveMode = !!window.__IMPECCABLE_LIVE_INIT__;
-  if (isLiveMode) {
-    debugBtn.style.display = "flex";
-  } else {
-    invoke<boolean>("get_debug_mode").then((enabled) => {
-      debugBtn.style.display = enabled ? "flex" : "none";
-    }).catch(() => {});
-  }
+  // Load initial state from Rust
+  invoke<boolean>("get_debug_mode").then((enabled) => {
+    debugBtn.style.display = enabled ? "flex" : "none";
+  }).catch(() => {});
 
   // Listen for changes from Rust (via settings window)
   await listen<{ enabled: boolean }>("debug-mode-changed", (event) => {

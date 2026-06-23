@@ -112,30 +112,20 @@ impl PrinterManager {
             };
         }
 
-        // Find printing printers
+        // 1. Show printing printer with shortest remaining time
         let printing: Vec<(usize, &PrinterStatus)> = statuses.iter()
             .enumerate()
             .filter(|(_, s)| s.status == "printing")
             .collect();
 
         if !printing.is_empty() {
-            // If multiple printing, show the one with shortest remaining time
             let (_, best) = printing.iter()
                 .min_by_key(|(_, s)| s.remaining_time)
                 .unwrap();
-            return PrinterStatus {
-                name: best.name.clone(),
-                status: best.status.clone(),
-                progress: best.progress,
-                remaining_time: best.remaining_time,
-                nozzle_temp: best.nozzle_temp,
-                bed_temp: best.bed_temp,
-                layer_num: best.layer_num,
-                total_layers: best.total_layers,
-            };
+            return (*best).clone();
         }
 
-        // No printing printer, show completed one if any
+        // 2. No printing, show first completed one
         let completed: Vec<&PrinterStatus> = statuses.iter()
             .filter(|s| s.status == "completed")
             .collect();
@@ -144,8 +134,30 @@ impl PrinterManager {
             return completed[0].clone();
         }
 
-        // No completed either, show the first one
+        // 3. No completed, show first printer
         statuses[0].clone()
+    }
+
+    fn find_priority_index(statuses: &[PrinterStatus]) -> Option<usize> {
+        let printing: Vec<(usize, &PrinterStatus)> = statuses.iter()
+            .enumerate()
+            .filter(|(_, s)| s.status == "printing")
+            .collect();
+
+        if !printing.is_empty() {
+            return printing.iter().min_by_key(|(_, s)| s.remaining_time).map(|(i, _)| *i);
+        }
+
+        let completed: Vec<(usize, &PrinterStatus)> = statuses.iter()
+            .enumerate()
+            .filter(|(_, s)| s.status == "completed")
+            .collect();
+
+        if !completed.is_empty() {
+            return Some(completed[0].0);
+        }
+
+        Some(0)
     }
 
     pub fn get_secondary_status(&self) -> PrinterStatus {
@@ -160,29 +172,22 @@ impl PrinterManager {
             };
         }
 
-        // Find printing printers
+        let priority_idx = Self::find_priority_index(&statuses);
+
+        // 1. If two+ printing, show the second shortest remaining time
         let printing: Vec<(usize, &PrinterStatus)> = statuses.iter()
             .enumerate()
             .filter(|(_, s)| s.status == "printing")
             .collect();
 
         if printing.len() >= 2 {
-            // If multiple printing, show the one with longest remaining time (not the priority)
-            let (_, worst) = printing.iter()
-                .max_by_key(|(_, s)| s.remaining_time)
-                .unwrap();
-            return PrinterStatus {
-                name: worst.name.clone(),
-                status: worst.status.clone(),
-                progress: worst.progress,
-                remaining_time: worst.remaining_time,
-                nozzle_temp: worst.nozzle_temp,
-                bed_temp: worst.bed_temp,
-                layer_num: worst.layer_num,
-                total_layers: worst.total_layers,
-            };
-        } else if printing.len() == 1 {
-            // Only one printing, show the non-printing one
+            let mut sorted = printing;
+            sorted.sort_by_key(|(_, s)| s.remaining_time);
+            return sorted[1].1.clone();
+        }
+
+        // 2. If one printing, show the non-printing one (excluding priority)
+        if printing.len() == 1 {
             let printing_idx = printing[0].0;
             for (i, s) in statuses.iter().enumerate() {
                 if i != printing_idx {
@@ -191,7 +196,15 @@ impl PrinterManager {
             }
         }
 
-        // No printing, show the second one
+        // 3. No printing: return any device that is NOT the priority one
+        if let Some(pri) = priority_idx {
+            for (i, s) in statuses.iter().enumerate() {
+                if i != pri {
+                    return s.clone();
+                }
+            }
+        }
+
         statuses[1].clone()
     }
 

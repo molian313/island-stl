@@ -7,15 +7,19 @@ mod window;
 pub mod printer;
 
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
+use std::sync::atomic::{AtomicBool, Ordering};
+use std::thread;
+use std::time::Duration;
 use tauri::Manager;
 use tauri::menu::{MenuBuilder, MenuItemBuilder};
 use tauri::tray::TrayIconBuilder;
 use tauri::image::Image;
+use windows::Win32::Foundation::HWND;
+use windows::Win32::UI::WindowsAndMessaging::{ShowWindow, SW_HIDE, SW_SHOWNOACTIVATE};
 
 use sysinfo::get_system_stats;
 use shortcuts::{get_shortcuts, add_shortcut, remove_shortcut, open_shortcut};
-use settings::{open_settings, get_settings, save_settings, get_auto_start, set_auto_start, get_debug_mode, set_debug_mode};
+use settings::{open_settings, get_settings, save_settings, get_auto_start, set_auto_start, get_debug_mode, set_debug_mode, get_blacklist, get_blacklist_enabled, set_blacklist_enabled, save_blacklist};
 
 fn create_tray_icon() -> Vec<u8> {
     let (size, center, radius) = (32u32, 16.0, 12.0);
@@ -56,6 +60,10 @@ pub fn run() {
             set_auto_start,
             get_debug_mode,
             set_debug_mode,
+            get_blacklist,
+            get_blacklist_enabled,
+            set_blacklist_enabled,
+            save_blacklist,
             window::show_context_menu,
             printer::get_printer_configs,
             printer::get_printer_status,
@@ -101,6 +109,76 @@ pub fn run() {
             // Start printer monitoring
             let app_handle_clone = app.handle().clone();
             pm_clone.start_monitoring(app_handle_clone);
+
+            // Start blacklist monitoring
+            {
+                let hwnd = window.hwnd().unwrap();
+                let hwnd_val = hwnd.0 as usize;
+                let settings = settings::load_settings_from_file();
+                let blacklist_processes = Arc::new(std::sync::Mutex::new(
+                    settings.blacklist_processes.iter().map(|s| s.trim().to_lowercase()).filter(|s| !s.is_empty()).collect::<Vec<String>>()
+                ));
+                let blacklist_enabled = Arc::new(AtomicBool::new(settings.blacklist_enabled));
+
+                // Fullscreen scan thread
+                {
+                    let blacklist = blacklist_processes.clone();
+                    let bl_enabled = blacklist_enabled.clone();
+                    thread::spawn(move || {
+                        loop {
+                            thread::sleep(Duration::from_secs(3));
+                            // Re-read settings
+                            let settings = settings::load_settings_from_file();
+                            bl_enabled.store(settings.blacklist_enabled, Ordering::Relaxed);
+                            *blacklist.lock().unwrap() = settings.blacklist_processes;
+                        }
+                    });
+                }
+
+                // Foreground process monitor thread
+                {
+                    let blacklist = blacklist_processes.clone();
+                    let bl_enabled = blacklist_enabled.clone();
+                    thread::spawn(move || {
+                        let hwnd = HWND(hwnd_val as *mut _);
+                        let mut hidden = false;
+                        loop {
+                            thread::sleep(Duration::from_millis(200));
+                            // Re-read settings periodically
+                            if hidden || !bl_enabled.load(Ordering::Relaxed) {
+                                let settings = settings::load_settings_from_file();
+                                bl_enabled.store(settings.blacklist_enabled, Ordering::Relaxed);
+                                *blacklist.lock().unwrap() = settings.blacklist_processes;
+                            }
+                            if !bl_enabled.load(Ordering::Relaxed) {
+                                if hidden {
+                                    unsafe { let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE); }
+                                    hidden = false;
+                                }
+                                continue;
+                            }
+                            let list = blacklist.lock().unwrap().clone();
+                            if list.is_empty() {
+                                if hidden {
+                                    unsafe { let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE); }
+                                    hidden = false;
+                                }
+                                continue;
+                            }
+                            let fg_match = window::get_foreground_process_name()
+                                .map(|n| list.iter().any(|b| *b == n))
+                                .unwrap_or(false);
+                            if fg_match && !hidden {
+                                unsafe { let _ = ShowWindow(hwnd, SW_HIDE); }
+                                hidden = true;
+                            } else if !fg_match && hidden {
+                                unsafe { let _ = ShowWindow(hwnd, SW_SHOWNOACTIVATE); }
+                                hidden = false;
+                            }
+                        }
+                    });
+                }
+            }
 
             Ok(())
         })
