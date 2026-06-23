@@ -56,3 +56,25 @@ There is no test suite, linter, or formatter configured.
 - `src/styles/island.css` is loaded via `<link>` in `index.html` — no bundler CSS processing.
 - No `@tauri-apps/plugin-fs` — file operations go through Rust commands, not the frontend.
 - The `windows` crate dependency pins to v0.61 and uses specific Win32 feature gates. Adding new Win32 APIs requires matching feature flags in `Cargo.toml`.
+
+## 问题排查
+
+遇到编译错误或异常时，先搜索以下目录，按关键词查找是否有现成解决方案：
+
+- `C:\Users\Administrator\Documents\molian\agents-resource\manual/problems\` — 手动整理的方案（永久保留）
+- `C:\Users\Administrator\Documents\molian\agents-resource\auto/problems\` — 自动保存的方案（可能被清理）
+
+关键词参考：
+
+| 搜索什么 | 关键词 |
+|---------|-------|
+| Tauri command pub 错误 | `tauri`, `command`, `pub` |
+| rumqttc/rustls 版本冲突 | `rumqttc`, `rustls`, `tls` |
+| Bambu Lab 自签名证书 | `bambu`, `certificate`, `self-signed` |
+| Windows crate API 签名 | `windows`, `win32`, `GetWindowRect` |
+| Vite 8 缺 esbuild | `vite`, `esbuild` |
+| Vite 构建目标过低 | `vite`, `target`, `es2022` |
+| 双打印机显示同名 | `printer`, `secondary`, `priority` |
+| Settings 页面同步 | `tauri`, `settings`, `inline` |
+| Rust dead_code 警告 | `dead_code`, `warning` |
+| GitHub Actions Node.js 弃用 | `github-actions`, `nodejs` |
