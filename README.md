@@ -1,0 +1,102 @@
+# Dynamic Island for Windows
+
+macOS 风格的 Windows 桌面浮动胶囊，实时显示系统状态和 3D 打印机进度。
+
+## 功能
+
+- **时间显示** — 实时时钟，展开后显示内存和网络速度
+- **快捷方式** — 拖拽文件夹添加，点击快速打开
+- **打印机监控** — 通过 MQTT 连接 Bambu Lab 打印机，实时显示打印进度、剩余时间
+- **多打印机** — 支持同时监控多台打印机，优先显示即将完成的打印机
+- **系统托盘** — 右键菜单快速访问设置
+- **开机自启** — Windows 注册表实现
+
+## 截图
+
+> 胶囊折叠状态 | 展开状态
+> ---|---
+> `[  12:00:00  ] [0%]` | `[  内存 68%  12:00:00  ↑1.2MB/s ] [ Bambu A1  打印中 2:30 ]`
+
+## 技术栈
+
+- **前端**: TypeScript + Vite（无框架）
+- **后端**: Rust (Tauri 2)
+- **打印机通信**: MQTT (rumqttc + rustls)
+- **系统API**: Win32 (GlobalMemoryStatusEx, GetIfTable)
+
+## 安装
+
+### 从源码构建
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式
+npm run tauri dev
+
+# 构建安装包
+npm run tauri build
+```
+
+### 前置要求
+
+- [Node.js](https://nodejs.org/) 18+
+- [Rust](https://www.rust-lang.org/tools/install)
+- [Tauri Prerequisites](https://v2.tauri.app/start/prerequisites/)
+
+## 配置打印机
+
+在设置面板中添加打印机配置：
+
+| 字段 | 说明 | 示例 |
+|------|------|------|
+| 名称 | 打印机昵称 | 1号 |
+| IP 地址 | 打印机局域网 IP | 192.168.0.109 |
+| 访问码 | Bambu Lab MQTT access code | 82d8f3a6 |
+| 序列号 | 打印机序列号 | 01P00C5C1902149 |
+
+配置文件保存在 `%APPDATA%\dynamic-island\printers_config.json`
+
+## 快捷键
+
+| 操作 | 方式 |
+|------|------|
+| 展开/折叠 | 鼠标悬停胶囊顶部触发区 |
+| 最小化 | 右键胶囊 → 收起 |
+| 切换视图 | 双击左面板（时间 ↔ 快捷方式） |
+| 切换单/多打印机 | 双击右面板 |
+| 添加快捷方式 | 拖拽文件夹到胶囊 |
+| 删除快捷方式 | 展开后拖拽图标出胶囊 |
+
+## 项目结构
+
+```
+├── src/                    # TypeScript 前端
+│   ├── main.ts            # 入口，轮询系统信息
+│   ├── dom.ts             # DOM 元素引用
+│   ├── state.ts           # 全局状态
+│   ├── settings.ts        # 设置页面逻辑
+│   └── modules/           # 功能模块
+│       ├── capsule-interaction.ts
+│       ├── minimize.ts
+│       ├── printer.ts
+│       ├── shortcut.ts
+│       └── view-switcher.ts
+├── src-tauri/             # Rust 后端
+│   ├── src/
+│   │   ├── lib.rs         # 入口 + 系统托盘
+│   │   ├── printer.rs     # MQTT 打印机监控
+│   │   ├── shortcuts.rs   # 快捷方式 CRUD
+│   │   ├── settings.rs    # 设置持久化
+│   │   ├── window.rs      # 鼠标监控 + 点击穿透
+│   │   ├── sysinfo.rs     # 系统信息获取
+│   │   └── icon.rs        # Windows 图标提取
+│   └── tauri.conf.json
+├── index.html             # 主界面
+└── settings.html          # 设置界面
+```
+
+## 许可证
+
+MIT
