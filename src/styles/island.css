@@ -145,7 +145,8 @@ html, body {
 
 .right-panel.multi-mode { width: 104px; gap: 4px; }
 .right-panel.multi-mode.expanded { width: 210px; height: 74px; border-radius: 35px; gap: 35px; overflow: visible; }
-.multi-mode.expanded .printer-unit { transform: translateX(-8px); transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
+.multi-mode .printer-unit { transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
+.multi-mode.expanded .printer-unit { transform: translateX(-8px); }
 
 /* ===== Time View ===== */
 .time-view {
