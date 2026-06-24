@@ -311,6 +311,21 @@
       <div class="content-body">
         <div class="page active" id="page-general">
           <div class="setting-group">
+            <div class="setting-group-title">外观</div>
+            <div class="setting-item">
+              <div class="setting-label">
+                <h3>主题</h3>
+                <p>切换灵动岛的视觉主题。暗色为经典纯色，玻璃为液态玻璃效果。</p>
+              </div>
+              <div class="setting-control">
+                <select id="theme-select" class="input" style="width:auto;padding:6px 12px;">
+                  <option value="dark">暗色</option>
+                  <option value="glass">玻璃</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="setting-group">
             <div class="setting-group-title">系统</div>
             <div class="setting-item">
               <div class="setting-label">
@@ -611,11 +626,33 @@
       }
     });
 
+    // Theme
+    const themeSelect = document.getElementById("theme-select");
+
+    async function loadTheme() {
+      try {
+        const theme = await invoke("get_theme");
+        themeSelect.value = theme;
+      } catch (e) {
+        console.error("[Settings]", e);
+      }
+    }
+
+    themeSelect.addEventListener("change", async () => {
+      try {
+        await invoke("save_theme", { theme: themeSelect.value });
+        showStatus("主题已切换");
+      } catch (e) {
+        console.error("[Settings]", e);
+      }
+    });
+
     // Init
     loadSettings();
     loadPrinterConfigs();
     loadDebugMode();
     loadBlacklist();
+    loadTheme();
   </script>
 </body>
 </html>

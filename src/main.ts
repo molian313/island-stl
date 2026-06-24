@@ -5,7 +5,7 @@ import { initCapsuleInteraction } from "./modules/capsule-interaction";
 import { initMinimize } from "./modules/minimize";
 import { initShortcut } from "./modules/shortcut";
 import { initPrinter } from "./modules/printer";
-import { startBrightnessPolling } from "./modules/brightness";
+import { initTheme } from "./modules/theme";
 
 interface SystemInfo {
   memory_percent: number;
@@ -64,7 +64,7 @@ function init() {
   initShortcut();
   initPrinter();
   initDebugButton();
-  startBrightnessPolling(200);
+  initTheme();
 }
 
 init();

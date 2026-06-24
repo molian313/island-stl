@@ -70,6 +70,8 @@ pub fn run() {
             get_blacklist_enabled,
             set_blacklist_enabled,
             save_blacklist,
+            settings::get_theme,
+            settings::save_theme,
             window::show_context_menu,
             screenshot::get_area_brightness,
             printer::get_printer_configs,

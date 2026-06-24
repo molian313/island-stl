@@ -8,6 +8,8 @@ use winreg::enums::*;
 #[cfg(windows)]
 use winreg::RegKey;
 
+fn default_theme() -> String { "dark".to_string() }
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SettingsData {
     #[serde(default)]
@@ -18,6 +20,8 @@ pub struct SettingsData {
     pub blacklist_enabled: bool,
     #[serde(default = "default_blacklist_processes")]
     pub blacklist_processes: Vec<String>,
+    #[serde(default = "default_theme")]
+    pub theme: String,
 }
 
 fn default_blacklist_processes() -> Vec<String> { Vec::new() }
@@ -37,7 +41,7 @@ pub fn load_settings_from_file() -> SettingsData {
             return data;
         }
     }
-    SettingsData { auto_start: false, debug_mode: false, blacklist_enabled: false, blacklist_processes: Vec::new() }
+    SettingsData { auto_start: false, debug_mode: false, blacklist_enabled: false, blacklist_processes: Vec::new(), theme: "dark".to_string() }
 }
 
 pub fn save_settings_to_file(data: &SettingsData) -> Result<(), String> {
@@ -182,5 +186,19 @@ pub fn save_blacklist(app: tauri::AppHandle, processes: Vec<String>) -> Result<(
     settings.blacklist_processes = normalized;
     save_settings_to_file(&settings)?;
     let _ = app.emit("blacklist-changed", serde_json::json!({ "processes": settings.blacklist_processes }));
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_theme() -> String {
+    load_settings_from_file().theme
+}
+
+#[tauri::command]
+pub fn save_theme(app: tauri::AppHandle, theme: String) -> Result<(), String> {
+    let mut settings = load_settings_from_file();
+    settings.theme = theme.clone();
+    save_settings_to_file(&settings)?;
+    let _ = app.emit("theme-changed", serde_json::json!({ "theme": theme }));
     Ok(())
 }

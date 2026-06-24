@@ -56,7 +56,7 @@ function updatePrinter(index: number, status: PrinterStatus) {
   const statusEl = document.querySelector(`${selector} .printer-status`) as HTMLSpanElement;
 
   if (progress) {
-    const circumference = 2 * Math.PI * 18;
+    const circumference = 2 * Math.PI * 12;
     const offset = circumference - (status.progress / 100) * circumference;
     progress.style.strokeDashoffset = `${offset}`;
     progress.style.stroke = getStatusColor(status.status);
