@@ -6,18 +6,16 @@ function minimizePanel() {
   if (isMinimized) return;
   setIsMinimized(true);
 
-  capsule.style.transition = "transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s cubic-bezier(0.4,0,0.2,1)";
-  capsule.style.transform = "translateX(-50%) scale(0)";
+  capsule.style.transition = "opacity 0.25s cubic-bezier(0.4,0,0.2,1)";
   capsule.style.opacity = "0";
   capsule.style.pointerEvents = "none";
 
   setTimeout(() => {
     capsule.style.display = "none";
-    capsule.style.transform = "";
     capsule.style.opacity = "";
     capsule.style.transition = "";
     collapsedIndicator.style.display = "block";
-  }, 300);
+  }, 280);
 }
 
 function expandFromMinimized() {
@@ -25,23 +23,18 @@ function expandFromMinimized() {
   setIsMinimized(false);
   collapsedIndicator.style.display = "none";
 
-  capsule.style.position = "fixed";
-  capsule.style.left = "50%";
-  capsule.style.top = "11px";
-  capsule.style.transform = "translateX(-50%)";
   capsule.style.display = "";
   capsule.style.pointerEvents = "";
   capsule.style.opacity = "0";
-  capsule.style.transition = "transform 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.25s cubic-bezier(0.4,0,0.2,1)";
+  capsule.style.transition = "opacity 0.25s cubic-bezier(0.4,0,0.2,1)";
 
   requestAnimationFrame(() => {
     capsule.style.opacity = "1";
-    capsule.style.transform = "translateX(-50%) scale(1)";
   });
 
   setTimeout(() => {
     capsule.style.transition = "";
-  }, 320);
+  }, 280);
 }
 
 export function initMinimize() {

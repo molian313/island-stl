@@ -4,8 +4,10 @@ mod icon;
 mod shortcuts;
 mod settings;
 mod window;
+mod screenshot;
 pub mod printer;
 
+use std::io::Write;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::thread;
@@ -39,6 +41,10 @@ fn create_tray_icon() -> Vec<u8> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    // Disable VT mouse tracking to prevent terminal garbling
+    let _ = std::io::stdout().write_all(b"\x1b[?1000l\x1b[?1003l\x1b[?1006l");
+    let _ = std::io::stdout().flush();
+
     let printer_manager = Arc::new(printer::PrinterManager::new());
     let pm_clone = printer_manager.clone();
     let debug_click_state = Arc::new(AtomicBool::new(false));
@@ -65,6 +71,7 @@ pub fn run() {
             set_blacklist_enabled,
             save_blacklist,
             window::show_context_menu,
+            screenshot::get_area_brightness,
             printer::get_printer_configs,
             printer::get_printer_status,
             printer::get_priority_printer_status,
@@ -78,7 +85,7 @@ pub fn run() {
 
             if let Ok(Some(monitor)) = window.primary_monitor() {
                 let screen = monitor.size();
-                let win = window.outer_size().unwrap_or(tauri::PhysicalSize::new(500, 100));
+                let win = window.outer_size().unwrap_or(tauri::PhysicalSize::new(500, 150));
                 let x = (screen.width.saturating_sub(win.width)) / 2;
                 let _ = window.set_position(tauri::PhysicalPosition::new(x, 0));
             }

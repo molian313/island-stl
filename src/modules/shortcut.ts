@@ -47,7 +47,7 @@ function renderShortcuts(shortcuts: ShortcutItem[]) {
 
     const labelShort = document.createElement("span");
     labelShort.className = "sc-label sc-label-short";
-    labelShort.textContent = item.name;
+    labelShort.textContent = item.name.slice(0, 2);
 
     const labelFull = document.createElement("span");
     labelFull.className = "sc-label sc-label-full";

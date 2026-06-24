@@ -37,6 +37,41 @@ html, body {
   border-radius: 35px;
 }
 
+:root {
+  --adaptive-text: #ffffff;
+}
+
+/* ===== Glass Effect (based on LGGC) ===== */
+.glass {
+  --lggc-blur: 8px;
+  --lggc-bg: rgba(255, 255, 255, 0.08);
+  --lggc-border: rgba(51, 51, 51, 0.08);
+  position: relative;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  backdrop-filter: blur(calc(var(--lggc-blur) * 0.35)) saturate(160%) !important;
+  -webkit-backdrop-filter: blur(calc(var(--lggc-blur) * 0.35)) saturate(160%) !important;
+  border: 1px double var(--lggc-border) !important;
+  box-shadow:
+    inset 1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.92),
+    inset -1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.9),
+    inset 0 0 3px rgba(15, 23, 42, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+.left-panel.glass,
+.right-panel.glass {
+  background: var(--lggc-bg) !important;
+  border: 1px double var(--lggc-border) !important;
+}
+
+.left-panel.glass,
+.right-panel.glass,
+.printer-circle.glass,
+.debug-expand-btn.glass {
+  color: var(--adaptive-text);
+}
+
 /* ===== Left Panel ===== */
 .left-panel {
   height: 50px;
@@ -54,14 +89,14 @@ html, body {
   pointer-events: auto;
   transition: width 0.35s cubic-bezier(0.25, 1, 0.5, 1),
               height 0.3s cubic-bezier(0.25, 1, 0.5, 1),
-              border-radius 0.3s ease;
+              border-radius 0.3s ease,
+              background 0.3s ease;
   will-change: width, height;
   align-self: flex-start;
 }
 
 .left-panel.time-mode { width: 140px; }
 .left-panel.time-mode.expanded { width: 270px; height: 74px; border-radius: 35px; }
-.left-panel:hover { filter: brightness(1.15); }
 
 .left-panel.shortcuts-mode { width: 140px; }
 .left-panel.shortcuts-mode.expanded { width: 270px; height: 74px; border-radius: 35px; }
@@ -72,7 +107,7 @@ html, body {
 .left-panel.shortcuts-mode .time-view { display: none; }
 .left-panel.time-mode .shortcut-view { display: none; }
 .left-panel.time-mode.multi-open.expanded .net-info { opacity: 0; max-width: 0; }
-.left-panel.shortcuts-mode.multi-open { width: 86px; }
+.left-panel.shortcuts-mode.multi-open { width: 86px; padding: 0 4px; }
 .shortcuts-mode.multi-open .shortcut-list { gap: 4px; }
 .shortcuts-mode.multi-open.expanded { width: 200px; height: 74px; border-radius: 35px; }
 .shortcuts-mode.multi-open.expanded .shortcut-list { gap: 6px; }
@@ -103,7 +138,6 @@ html, body {
 
 .right-panel.single-mode { width: 50px; padding: 0; justify-content: center; }
 .right-panel.single-mode.expanded { width: 140px; height: 74px; border-radius: 35px; padding: 0 8px; justify-content: center; }
-.right-panel:hover { filter: brightness(1.15); }
 
 .right-panel.multi-mode { width: 104px; gap: 4px; }
 .right-panel.multi-mode.expanded { width: 210px; height: 74px; border-radius: 35px; gap: 12px; overflow: visible; }
@@ -115,28 +149,35 @@ html, body {
   gap: 16px;
   white-space: nowrap;
   transition: opacity 0.3s ease;
+  contain: layout paint;
 }
 
 .time-text {
-  color: #ffffff;
+  color: var(--adaptive-text);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.05em;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  min-width: 7.5ch;
   transition: font-size 0.3s ease;
   will-change: font-size;
 }
 
-.expanded .time-text { font-size: 18px; }
+.expanded .time-text { font-size: 18px; min-width: 7.5ch; }
 
 .mem-label {
-  color: #aaa;
+  color: var(--adaptive-text);
   font-size: 12px;
   font-weight: 500;
   opacity: 0;
   max-width: 0;
   overflow: hidden;
   transition: opacity 0.3s ease, max-width 0.4s ease;
-  will-change: opacity, max-width;
+  contain: layout paint;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  min-width: 5ch;
 }
 
 .expanded .mem-label { opacity: 1; max-width: 60px; }
@@ -147,12 +188,14 @@ html, body {
   gap: 4px;
   font-size: 10px;
   font-weight: 400;
-  color: #777;
+  color: var(--adaptive-text);
   opacity: 0;
   max-width: 0;
   overflow: hidden;
   transition: opacity 0.3s ease 0.05s, max-width 0.4s ease;
-  will-change: opacity, max-width;
+  contain: layout paint;
+  font-variant-numeric: tabular-nums;
+  min-width: 7ch;
 }
 
 .expanded .net-info { opacity: 1; max-width: 60px; }
@@ -199,7 +242,10 @@ html, body {
 }
 
 .shortcuts-mode .shortcut-list { opacity: 1; }
-.shortcuts-mode.expanded .shortcut-list { gap: 8px; overflow: visible; }
+.shortcuts-mode.multi-open .shortcut-list {
+  max-width: 80px;
+}
+.shortcuts-mode.expanded .shortcut-list { gap: 8px; overflow: visible; max-width: none; }
 
 .sc-item {
   display: flex;
@@ -235,7 +281,7 @@ html, body {
 .sc-label {
   font-size: 9px;
   font-weight: 400;
-  color: #aaa;
+  color: var(--adaptive-text);
   letter-spacing: 0.02em;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -265,7 +311,8 @@ html, body {
 .shortcut-empty {
   font-size: 10px;
   font-weight: 400;
-  color: rgba(255, 255, 255, 0.3);
+  color: var(--adaptive-text);
+  opacity: 0.5;
   text-align: center;
   padding: 4px;
 }
@@ -302,7 +349,6 @@ html, body {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: #0a0a0a;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -322,11 +368,12 @@ html, body {
 }
 
 .printer-percent {
-  color: white;
+  color: var(--adaptive-text);
   font-size: 12px;
   font-weight: 600;
   position: relative;
   z-index: 1;
+  opacity: 0.9;
 }
 
 .printer-detail {
@@ -338,26 +385,27 @@ html, body {
   white-space: nowrap;
   transition: opacity 0.3s ease, max-width 0.3s ease, margin-left 0.3s ease;
   margin-left: 0;
-  will-change: opacity, max-width, margin-left;
 }
 
 .expanded .printer-detail { opacity: 1; max-width: 50px; margin-left: 8px; }
 
 .printer-name {
-  color: white;
+  color: var(--adaptive-text);
   font-size: 12px;
   font-weight: 500;
 }
 
 .printer-status {
-  color: #888;
+  color: var(--adaptive-text);
   font-size: 10px;
   font-weight: 400;
+  opacity: 0.7;
 }
 
 .printer-detail-2 {
   opacity: 0;
   max-width: 0;
+  overflow: hidden;
   transition: opacity 0.3s ease 0.08s, max-width 0.3s ease 0.08s;
 }
 
