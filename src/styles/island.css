@@ -137,7 +137,7 @@ html, body {
 }
 
 .right-panel.single-mode { width: 50px; padding: 0; justify-content: center; }
-.right-panel.single-mode:not(.expanded) .printer-unit { transform: translateX(21px); }
+.right-panel.single-mode:not(.expanded) .printer-unit { transform: translateX(21px); transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .right-panel.single-mode.expanded .printer-unit { transform: translateX(0); transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .right-panel.single-mode.expanded { width: 140px; height: 74px; border-radius: 35px; padding: 0 8px; justify-content: center; }
 
