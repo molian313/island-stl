@@ -84,6 +84,12 @@ export async function initPrinter() {
     updatePrinter2FromSecondary();
   });
 
+  // Listen for config changes from settings page
+  await listen("printer-configs-changed", () => {
+    updatePrinter1FromPriority();
+    updatePrinter2FromSecondary();
+  });
+
   // Initial load
   updatePrinter1FromPriority();
   updatePrinter2FromSecondary();

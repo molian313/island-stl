@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 use tauri::{AppHandle, Emitter};
+use tokio::sync::watch;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PrinterConfig {
@@ -37,13 +38,16 @@ pub struct PrinterEvent {
 pub struct PrinterManager {
     configs: Arc<Mutex<Vec<PrinterConfig>>>,
     statuses: Arc<Mutex<Vec<PrinterStatus>>>,
+    config_changed: watch::Sender<bool>,
 }
 
 impl PrinterManager {
     pub fn new() -> Self {
+        let (tx, _) = watch::channel(false);
         Self {
             configs: Arc::new(Mutex::new(Vec::new())),
             statuses: Arc::new(Mutex::new(Vec::new())),
+            config_changed: tx,
         }
     }
 
@@ -227,11 +231,19 @@ impl PrinterManager {
             .ok();
     }
 
+    fn subscribe_config_changed(&self) -> watch::Receiver<bool> {
+        self.config_changed.subscribe()
+    }
+
     async fn mqtt_loop(self: Arc<Self>, app: AppHandle) {
+        let mut config_rx = self.subscribe_config_changed();
         loop {
             let configs = self.get_configs();
             if configs.is_empty() {
-                tokio::time::sleep(Duration::from_secs(3)).await;
+                tokio::select! {
+                    _ = tokio::time::sleep(Duration::from_secs(3)) => {}
+                    _ = config_rx.changed() => { let _ = config_rx.borrow_and_update(); }
+                }
                 continue;
             }
 
@@ -241,27 +253,41 @@ impl PrinterManager {
                 let config = config.clone();
                 let app = app.clone();
                 let manager = self.clone();
+                let mut cfg_rx = self.subscribe_config_changed();
                 handles.push(tokio::spawn(async move {
-                    match manager.clone().connect_and_monitor(i, &config, &app).await {
-                        Ok(_) => {}
-                        Err(_e) => {
-                            let status = PrinterStatus {
-                                name: config.name.clone(),
-                                status: "disconnected".to_string(),
-                                progress: 0, remaining_time: 0,
-                                nozzle_temp: 0.0, bed_temp: 0.0,
-                                layer_num: 0, total_layers: 0,
-                            };
-                            manager.update_status(i, status.clone());
-                            let _ = app.emit("printer-status", PrinterEvent { index: i, status });
+                    tokio::select! {
+                        result = manager.clone().connect_and_monitor(i, &config, &app) => {
+                            match result {
+                                Ok(_) => {}
+                                Err(_e) => {
+                                    let status = PrinterStatus {
+                                        name: config.name.clone(),
+                                        status: "disconnected".to_string(),
+                                        progress: 0, remaining_time: 0,
+                                        nozzle_temp: 0.0, bed_temp: 0.0,
+                                        layer_num: 0, total_layers: 0,
+                                    };
+                                    manager.update_status(i, status.clone());
+                                    let _ = app.emit("printer-status", PrinterEvent { index: i, status });
+                                }
+                            }
                         }
+                        _ = cfg_rx.changed() => {}
                     }
                 }));
             }
 
-            // Wait for all to finish (they run until disconnect)
-            for handle in handles {
-                let _ = handle.await;
+            // Wait for all to finish or config change
+            tokio::select! {
+                _ = async {
+                    for handle in handles {
+                        let _ = handle.await;
+                    }
+                } => {}
+                _ = config_rx.changed() => {
+                    let _ = config_rx.borrow_and_update();
+                    // Abort all running tasks
+                }
             }
 
             tokio::time::sleep(Duration::from_secs(5)).await;
@@ -380,7 +406,23 @@ pub fn get_secondary_printer_status(manager: tauri::State<'_, Arc<PrinterManager
 }
 
 #[tauri::command]
-pub fn set_printer_configs(manager: tauri::State<'_, Arc<PrinterManager>>, configs: Vec<PrinterConfig>) -> Result<(), String> {
+pub fn set_printer_configs(manager: tauri::State<'_, Arc<PrinterManager>>, app: AppHandle, configs: Vec<PrinterConfig>) -> Result<(), String> {
+    let count = configs.len();
     *manager.configs.lock().unwrap() = configs;
-    manager.save_configs()
+    let mut statuses = manager.statuses.lock().unwrap();
+    statuses.truncate(count);
+    while statuses.len() < count {
+        statuses.push(PrinterStatus {
+            name: String::new(),
+            status: "no_printer".to_string(),
+            progress: 0, remaining_time: 0,
+            nozzle_temp: 0.0, bed_temp: 0.0,
+            layer_num: 0, total_layers: 0,
+        });
+    }
+    drop(statuses);
+    manager.save_configs()?;
+    let _ = manager.config_changed.send(true);
+    let _ = app.emit("printer-configs-changed", ());
+    Ok(())
 }
