@@ -75,6 +75,7 @@ pub fn setup_click_through(app: &tauri::App, debug_click_state: Arc<AtomicBool>)
         let zone_half = (ZONE_HALF * scale) as i32;
         let zone_top = (ZONE_TOP * scale) as i32;
         let mut was_on_capsule = false;
+        let mut was_interacting = false;
 
         loop {
             if let Some((mx, my)) = get_cursor_pos() {
@@ -103,8 +104,14 @@ pub fn setup_click_through(app: &tauri::App, debug_click_state: Arc<AtomicBool>)
                     false
                 };
 
+                // When interacting transitions from true to false, force re-sync
+                if was_interacting && !interacting {
+                    set_click_through(hwnd, !on_capsule);
+                    was_on_capsule = on_capsule;
+                }
+                was_interacting = interacting;
+
                 // Toggle click-through based on capsule hover
-                // Skip if debug mode is enabled (keep click-through disabled)
                 if debug_mode {
                     set_click_through(hwnd, false);
                     was_on_capsule = on_capsule;
