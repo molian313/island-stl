@@ -1,6 +1,6 @@
 {
   "productName": "Dynamic Island",
-  "version": "1.1.0",
+  "version": "1.1.2",
   "identifier": "com.dynamicisland.app",
   "build": {
     "beforeDevCommand": "npm run dev",
