@@ -138,9 +138,7 @@ html, body {
 
 .right-panel.single-mode { width: 50px; padding: 0; justify-content: center; }
 .right-panel.single-mode:not(.expanded) .printer-unit { transform: translateX(21px); }
-.right-panel.single-mode.expanded .printer-unit { transform: translateX(0); }
-.right-panel.single-mode:not(.expanded) .printer-unit,
-.right-panel.single-mode.expanded .printer-unit { transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
+.right-panel.single-mode.expanded .printer-unit { transform: translateX(0); transition: transform 0.35s cubic-bezier(0.25, 1, 0.5, 1); }
 .right-panel.single-mode.expanded { width: 140px; height: 74px; border-radius: 35px; padding: 0 8px; justify-content: center; }
 
 .right-panel.multi-mode { width: 104px; gap: 4px; }
@@ -170,7 +168,6 @@ html, body {
   will-change: font-size;
 }
 
-.theme-glass .time-text { color: var(--adaptive-text); }
 .expanded .time-text { font-size: 18px; min-width: 7.5ch; }
 
 .mem-label {
@@ -335,7 +332,7 @@ html, body {
   transition: color 0.3s ease;
 }
 
-.theme-glass .shortcut-empty { color: var(--adaptive-text); opacity: 0.5; }
+.theme-glass .shortcut-empty { color: var(--adaptive-text); }
 
 .shortcut-view.drag-over {
   background: rgba(34, 197, 94, 0.15);
@@ -394,10 +391,7 @@ html, body {
   position: relative;
   z-index: 1;
   opacity: 0.9;
-  transition: color 0.3s ease;
 }
-
-.theme-glass .printer-percent { color: var(--adaptive-text); }
 
 .printer-detail {
   display: flex;
@@ -410,8 +404,7 @@ html, body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.32s cubic-bezier(0.25, 1, 0.5, 1),
-              transform 0.32s cubic-bezier(0.25, 1, 0.5, 1),
-              color 0.3s ease;
+              transform 0.32s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .expanded .printer-detail { opacity: 1; transform: translateY(-50%) translateX(0) scale(1); }
@@ -420,20 +413,16 @@ html, body {
   color: white;
   font-size: 12px;
   font-weight: 500;
-  transition: color 0.3s ease;
 }
-
-.theme-glass .printer-name { color: var(--adaptive-text); }
 
 .printer-status {
   color: #888;
   font-size: 10px;
   font-weight: 400;
   opacity: 0.7;
-  transition: color 0.3s ease;
 }
 
-.theme-glass .printer-status { color: var(--adaptive-text); }
+.theme-glass .printer-unit { color: var(--adaptive-text); }
 
 .printer-detail-2 {
   opacity: 0;
