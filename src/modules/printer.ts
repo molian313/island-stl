@@ -45,7 +45,7 @@ function formatTime(minutes: number): string {
   if (minutes <= 0) return "--";
   const h = Math.floor(minutes / 60);
   const m = minutes % 60;
-  return h > 0 ? `${h}:${m.toString().padStart(2, "0")}` : `${m}:00`;
+  return h > 0 ? `${h}:${m.toString().padStart(2, "0")}` : `0:${m.toString().padStart(2, "0")}`;
 }
 
 function updatePrinter(index: number, status: PrinterStatus) {
