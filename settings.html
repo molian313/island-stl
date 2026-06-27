@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>灵动岛 - 设置</title>
+  <link rel="icon" type="image/png" href="../icons/32x32.png" />
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -30,6 +31,20 @@
     .sidebar-header {
       padding: 24px 20px;
       border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .sidebar-header img {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+    }
+
+    .sidebar-header-text {
+      display: flex;
+      flex-direction: column;
     }
 
     .sidebar-header h1 {
@@ -292,8 +307,11 @@
   <div class="container">
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h1>灵动岛</h1>
-        <p>设置</p>
+        <img src="../icons/128x128.png" alt="灵动岛" />
+        <div class="sidebar-header-text">
+          <h1>灵动岛</h1>
+          <p>设置</p>
+        </div>
       </div>
       <nav class="nav-list">
         <div class="nav-item active" data-page="general">常规设置</div>
