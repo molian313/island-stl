@@ -65,7 +65,7 @@ html, body {
     inset 1.5px -1.5px 1px -1px rgba(255, 255, 255, 0.92),
     inset -1.5px 1.5px 1px -1px rgba(255, 255, 255, 0.9),
     inset 0 0 3px rgba(15, 23, 42, 0.35),
-    0 8px 24px rgba(0, 0, 0, 0.14);
+    0 8px 12px rgba(0, 0, 0, 0.14);
 }
 
 .theme-glass .left-panel.glass,
@@ -151,9 +151,9 @@ html, body {
 .right-panel.single-mode.expanded { width: 140px; height: 74px; border-radius: 35px; padding: 0 8px; justify-content: center; animation: springWidthExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
 .right-panel.multi-mode { width: 104px; gap: 4px; }
-.right-panel.multi-mode.expanded { width: 210px; height: 74px; border-radius: 35px; gap: 35px; overflow: visible; animation: springWidthExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.right-panel.multi-mode.expanded { width: 210px; height: 74px; border-radius: 35px; gap: 45px; overflow: visible; animation: springWidthExpand 0.5s cubic-bezier(0.34, 1.56, 0.64, 1); }
 .multi-mode .printer-unit { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.multi-mode.expanded .printer-unit { transform: translateX(-8px); }
+.multi-mode.expanded .printer-unit { transform: translateX(-16px); }
 
 /* ===== Time View ===== */
 .time-view {

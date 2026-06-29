@@ -8,6 +8,7 @@ interface PrinterConfig {
 }
 
 let printerConfigs: PrinterConfig[] = [];
+let editingIndex = -1;
 
 // Page navigation
 const navItems = document.querySelectorAll(".nav-item");
@@ -75,14 +76,40 @@ function renderPrinterList() {
         <div class="printer-item-name">${cfg.name}</div>
         <div class="printer-item-ip">${cfg.ip_address}</div>
       </div>
-      <button class="btn btn-danger" data-index="${i}">删除</button>
+      <div class="printer-item-actions">
+        <button class="btn btn-edit" data-index="${i}">编辑</button>
+        <button class="btn btn-danger" data-index="${i}">删除</button>
+      </div>
     `;
-    el.querySelector("button")?.addEventListener("click", () => {
+    el.querySelector(".btn-edit")?.addEventListener("click", () => {
+      editingIndex = i;
+      pcfgName.value = cfg.name;
+      pcfgIp.value = cfg.ip_address;
+      pcfgAccess.value = cfg.access_code;
+      pcfgSerial.value = cfg.serial;
+      pcfgAdd.textContent = "更新";
+      pcfgAdd.classList.remove("btn-primary");
+      pcfgAdd.classList.add("btn-edit");
+    });
+    el.querySelector(".btn-danger")?.addEventListener("click", () => {
+      if (editingIndex === i) cancelEdit();
+      else if (editingIndex > i) editingIndex--;
       printerConfigs.splice(i, 1);
       renderPrinterList();
     });
     printerList.appendChild(el);
   });
+}
+
+function cancelEdit() {
+  editingIndex = -1;
+  pcfgAdd.textContent = "添加";
+  pcfgAdd.classList.remove("btn-edit");
+  pcfgAdd.classList.add("btn-primary");
+  pcfgName.value = "";
+  pcfgIp.value = "";
+  pcfgAccess.value = "";
+  pcfgSerial.value = "";
 }
 
 pcfgAdd.addEventListener("click", () => {
@@ -92,7 +119,12 @@ pcfgAdd.addEventListener("click", () => {
   const serial = pcfgSerial.value.trim();
   if (!name || !ip || !access || !serial) return;
 
-  printerConfigs.push({ name, ip_address: ip, access_code: access, serial: serial });
+  if (editingIndex >= 0) {
+    printerConfigs[editingIndex] = { name, ip_address: ip, access_code: access, serial: serial };
+    cancelEdit();
+  } else {
+    printerConfigs.push({ name, ip_address: ip, access_code: access, serial: serial });
+  }
   renderPrinterList();
 
   pcfgName.value = "";
@@ -119,8 +151,7 @@ async function loadPrinterConfigs() {
   }
 }
 
-// Save button
-const saveBtn = document.getElementById("save-btn")!;
+// Status
 const statusEl = document.getElementById("status")!;
 
 function showStatus(msg: string) {
@@ -128,15 +159,6 @@ function showStatus(msg: string) {
   statusEl.classList.add("show");
   setTimeout(() => statusEl.classList.remove("show"), 2000);
 }
-
-saveBtn.addEventListener("click", async () => {
-  try {
-    await invoke("set_auto_start", { enabled: autoStartToggle.checked });
-    showStatus("已保存");
-  } catch (e) {
-    console.error("[Settings]", e);
-  }
-});
 
 // Debug mode
 const debugToggle = document.getElementById("debug-toggle") as HTMLInputElement;
